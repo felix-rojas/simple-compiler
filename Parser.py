@@ -63,6 +63,9 @@ class Parser:
 		tree = self.program()
 		if self.token.tag == Tag.EOF:
 			tree.eval(self.current_table)
+		else:
+			# trailing commas or unexpected tokens would be parsed otherwise
+			self.error("unexpected token " + str(self.token) + " after program end")
 	
 	#<primary-expression> ::= <identifier> || <number> || <true>	|| <false> ||  '(' <expression> ')'
 	def primaryExpression(self):
