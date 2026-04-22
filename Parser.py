@@ -1,4 +1,5 @@
 from Lexer import *
+from Translator import *
 
 class Parser:
 	lex = None
@@ -67,17 +68,25 @@ class Parser:
 	def primaryExpression(self):
 		if self.token.tag in self.firstPrimaryExpression:
 			if self.token.tag == Tag.ID:
+				name = self.token.value
+				line = self.lex.line
 				self.check(Tag.ID)
+				return Identifier(name, line)
 			elif self.token.tag == Tag.NUMBER:
+				value = self.token.value
 				self.check(Tag.NUMBER)
+				return Number(value)
 			elif self.token.tag == Tag.TRUE:
 				self.check(Tag.TRUE)
+				return Boolean(True)
 			elif self.token.tag == Tag.FALSE:
 				self.check(Tag.FALSE)
+				return Boolean(False)
 			elif self.token.tag == ord('('):
 				self.check(ord('('))
-				self.expression()
+				expression = self.expression()
 				self.check(ord(')'))
+				return expression
 		else:
 			self.error("expected a primary expression before " + str(self.token)) 
 
@@ -86,12 +95,14 @@ class Parser:
 		if self.token.tag in self.firstUnaryExpression:
 			if self.token.tag == ord('-'):
 				self.check(ord('-'))
-				self.unaryExpression()
+				expr = self.unaryExpression()
+				return Minus(expr)
 			elif self.token.tag == ord('!'):
 				self.check(ord('!'))
-				self.unaryExpression()
+				expr = self.unaryExpression()
+				return Not(expr)
 			else:
-				self.primaryExpression()
+				return self.primaryExpression()
 		else: 
 			self.error("expected an unary expression before " + str(self.token))
 
@@ -99,52 +110,57 @@ class Parser:
 	#<extended-multiplicative-expression> ::= '/' <unary-expression> <extended-multiplicative-expression>
 	#<extended-multiplicative-expression> ::= MOD <unary-expression> <extended-multiplicative-expression>
 	#<extended-multiplicative-expression> ::= ' '
-	def extendedMultiplicativeExpression(self):
+	def extendedMultiplicativeExpression(self,left):
 		if self.token.tag in self.firstExtendedMultiplicativeExpression:
 			if self.token.tag == ord('*'):
 				self.check(ord('*'))
-				self.unaryExpression()
-				self.extendedMultiplicativeExpression()
+				right = self.unaryExpression()
+				node = Mutiply(left,right)
+				self.extendedMultiplicativeExpression(node)
 			elif self.token.tag == ord('/'):
 				self.check(ord('/'))
-				self.unaryExpression()
-				self.extendedMultiplicativeExpression()
+				right = self.unaryExpression()
+				node = Divide(left, right)
+				self.extendedMultiplicativeExpression(node)
 			elif self.token.tag == Tag.MOD:
 				self.check(Tag.MOD)
-				self.unaryExpression()
-				self.extendedMultiplicativeExpression()
+				right = self.unaryExpression()
+				node = Modulo(left, right)
+				self.extendedMultiplicativeExpression(node)
 		else:
-			pass
+			return left
 
 	#<multiplicative-expression> ::= <unary-expression> <extended-multiplicative-expression>
 	def multiplicativeExpression(self):
 		if self.token.tag in self.firstMultiplicativeExpression:
-			self.unaryExpression()
-			self.extendedMultiplicativeExpression()
+			expr = self.unaryExpression()
+			return self.extendedMultiplicativeExpression(expr)
 		else:
 			self.error("expected an multiplicative expression before " + str(self.token))
 
 	#<extended-additive-expression> ::= '+' <multiplicative-expression> <extended-additive-expression>
 	#<extended-additive-expression> ::= '-' <multiplicative-expression> <extended-additive-expression>
 	#<extended-additive-expression> ::= ' '
-	def extendedAdditiveExpression(self):
+	def extendedAdditiveExpression(self,left):
 		if self.token.tag in self.firstExtendedAdditiveExpression:
 			if self.token.tag == ord('+'):
 				self.check(ord('+'))
-				self.multiplicativeExpression()
-				self.extendedAdditiveExpression()
+				right = self.multiplicativeExpression()
+				node = Add(left,right)
+				return self.extendedAdditiveExpression(node)
 			elif self.token.tag == ord('-'):
 				self.check(ord('-'))
-				self.multiplicativeExpression()
-				self.extendedAdditiveExpression()
+				right = self.multiplicativeExpression()
+				node = Subtract(left,right)
+				return self.extendedAdditiveExpression(node)
 		else:
 			pass
 
 	#<additive-expression> ::= <multiplicative-expression> <extended-additive-expression>
-	def additiveExpression(self):
+	def additiveExpression(self,left):
 		if self.token.tag in self.firstAdditiveExpression:
-			self.multiplicativeExpression()
-			self.extendedAdditiveExpression()
+			left = self.multiplicativeExpression()
+			return self.extendedAdditiveExpression(node)
 		else:
 			self.error("expected an additive expression before " + str(self.token))
 
@@ -157,97 +173,105 @@ class Parser:
 		if self.token.tag in self.firstExtendedRelationalExpression:
 			if self.token.tag == ord('<'):
 				self.check(ord('<'))
-				self.additiveExpression()
-				self.extendedRelationalExpression()
+				right = self.additiveExpression()
+				node = Lesser(left,right)
+				return self.extendedRelationalExpression(node)
 			elif self.token.tag == ord('>'):
 				self.check(ord('>'))
-				self.additiveExpression()
-				self.extendedRelationalExpression()
+				right = self.additiveExpression()
+				node = Larger(left,right)
+				return self.extendedRelationalExpression(node)
 			elif self.token.tag == Tag.LEQ:
 				self.check(Tag.LEQ)
-				self.additiveExpression()
-				self.extendedRelationalExpression()
+				right = self.additiveExpression()
+				node = LesserEqual(left,right)
+				return self.extendedRelationalExpression(node)
 			elif self.token.tag == Tag.GEQ:
 				self.check(Tag.GEQ)
-				self.additiveExpression()
-				self.extendedRelationalExpression()
+				right = self.additiveExpression()
+				node = LargerEqual(left,right)
+				return self.extendedRelationalExpression(node)
 		else:
-			pass
+			return left
 	
 	#<relational-expression> ::= <additive-expression> <extended-relational-expression>
 	def relationalExpression(self):
 		if self.token.tag in self.firstRelationalExpression:
-			self.additiveExpression()
-			self.extendedRelationalExpression()
+			left = self.additiveExpression()
+			return self.extendedRelationalExpression(left)
 		else:
 			self.error("expected an relational expression before " + str(self.token))
 
 	#<extended-equality-expression> := '=' <relational-expression> <extended-equality-expression>
 	#<extended-equality-expression> := '<''>' <relational-expression> <extended-equality-expression>
 	#<extended-equality-expression> ::= ' '
-	def extendedEqualityExpression(self):
+	def extendedEqualityExpression(self,left):
 		if self.token.tag in self.firstExtendedEqualityExpression:
 			if self.token.tag == ord('='):
 				self.check(ord('='))
-				self.relationalExpression()
-				self.extendedEqualityExpression()
+				right = self.relationalExpression()
+				node = Equal(right,left)
+				return self.extendedEqualityExpression(node)
 			elif self.token.tag == Tag.NEQ:
 				self.check(Tag.NEQ)
-				self.relationalExpression()
-				self.extendedEqualityExpression()
+				right = self.relationalExpression()
+				node = NotEqual(right,left)
+				return self.extendedEqualityExpression(node)
 		else:
-			pass
+			return left
 
 	#<equality-expression> ::= <relational-expression> <extended-equality-expression>
 	def equalityExpression(self):
 		if self.token.tag in self.firstEqualityExpression:
-			self.relationalExpression()
-			self.extendedEqualityExpression()
+			left = self.relationalExpression()
+			return self.extendedEqualityExpression(left)
 		else:
 			self.error("expected an equality expression before " + str(self.token))
 
 	#<extended-conditional-term> ::= AND <equality-expression> <extended-conditional-term>
 	#<extended-boolean-term> ::= ' '
-	def extendedConditionalTerm(self):
+	def extendedConditionalTerm(self,left):
 		if self.token.tag in self.firstExtendedConditionalTerm:
 			if self.token.tag == Tag.AND:
 				self.check(Tag.AND)
-				self.equalityExpression()
-				self.extendedConditionalTerm()
+				right = self.equalityExpression()
+				node = And(left,right)
+				return self.extendedConditionalTerm(node)
 		else:
-			pass
+			return left
 
 	#<conditional-term> ::= <equality-expression> <extended-conditional-term>
 	def conditionalTerm(self):
 		if self.token.tag in self.firstConditionalTerm:
-			self.equalityExpression()
-			self.extendedConditionalTerm()
+			expr = self.equalityExpression()
+			return self.extendedConditionalTerm(expr)
 		else:
 			self.error("expected an conditional term before " + str(self.token))
 
 	#<extended-conditional-expression> ::= OR <conditional-term> <extended-conditional-expression>
 	#<extended-conditional-expression> ::= ' '
-	def extendedConditionalExpression(self):
+	def extendedConditionalExpression(self,left):
 		if self.token.tag in self.firstExtendedConditionalExpression:
 			if self.token.tag == Tag.OR:
 				self.check(Tag.OR)
-				self.conditionalTerm()
-				self.extendedConditionalExpression()
+				right = self.conditionalTerm()
+				node = Or(left,right)
+				return self.extendedConditionalExpression(node)
 		else:
-			pass
+			return left
 
 	#<conditional-expression> ::= <conditional-term> <extended-conditional-expression>
 	def conditionalExpression(self):
 		if self.token.tag in self.firstConditionalExpression:
-			self.conditionalTerm()
-			self.extendedConditionalExpression()
+			epxr = self.conditionalTerm()
+			return self.extendedConditionalExpression(expr)
 		else:
 			self.error("expected an conditional expression before " + str(self.token))
 
 	#<expression> ::= <conditional-expression>
 	def expression(self):
 		if self.token.tag in self.firstExpression:
-			self.conditionalExpression()
+			return self.conditionalExpression()
 		else:
 			self.error("expected an expression before " + str(self.token))
 
@@ -257,8 +281,9 @@ class Parser:
 			if self.token.tag == Tag.PRINT:
 				self.check(Tag.PRINT)
 				self.check(ord('('))
-				self.expression()
+				expr = self.expression()
 				self.check(ord(')'))
+				return Print(expr)
 		else:
 			self.error("expected a text statement before " + str(self.token))
 
@@ -266,9 +291,12 @@ class Parser:
 	def assigmentStatement(self):
 		if self.token.tag in self.firstAssigmentStatement:
 			if self.token.tag == Tag.ID:
+				id_name = self.token.value
+				line = self.lex.line
 				self.check(Tag.ID)
 				self.check(Tag.ASSIGN)
-				self.expression()
+				expr = self.expression()
+				return Assignment(id_name, expr, line)
 		else:
 			self.error("expected a assigment statement before " + str(self.token))
 	
@@ -276,38 +304,43 @@ class Parser:
 	def statement(self):
 		if self.token.tag in self.firstStatement:
 			if self.token.tag in self.firstAssigmentStatement:
-				self.assigmentStatement()
+				return self.assigmentStatement()
 			elif self.token.tag in self.firstTextStatement:
-				self.textStatement()
+				return self.textStatement()
 		else: 
 			self.error("expected a statement before " + str(self.token))
 	
 	#<statement-sequence> ::= <statement> <statement-sequence>
 	#<statement-sequence> ::= ' '
+	# Recursively descend and append statements
 	def statementSequence(self):
-		if self.token.tag in self.firstStatementSequence:
-			self.statement()
-			self.statementSequence()
-		else:
-			pass
+		statements = []
+		while self.token.tag in self.firstStatementSequence:
+			stmnt = self.statement()
+			if stmnt:
+				statements.append(stmnt)
+			return statements
 	
 	#<identifier-list> ::= ',' <identifier> <identifier-list>
 	#<identifier-list> ::= ' '
+	# not sure if i should handle the else here since ill call it recursively
 	def identifierList(self):
 		if self.token.tag in self.firstIdentifierList:
 			if self.token.tag == ord(','):
+				id_name = self.token.value
 				self.check(ord(','))
+				self.current_table.insert(id_name)
 				self.check(Tag.ID)
 				self.identifierList()
-		else:
-			pass
 	
 	#<declaration-sequence> ::= VAR <identifier> <identifier-list>
 	def declarationSequence(self):
 		if self.token.tag in self.firstDeclarationSequence:
 			if self.token.tag == Tag.VAR:
 				self.check(Tag.VAR)
+				id_name = self.token.value
 				self.check(Tag.ID)
+				self.current_table.insert(id_name)
 				self.identifierList()
 		else: 
 			self.error("expected a declaration sequence before " + str(self.token))
@@ -316,7 +349,7 @@ class Parser:
 	def program(self):
 		if self.token.tag in self.firstProgram:
 			self.declarationSequence()
-			self.statementSequence()
+			statements = self.statementSequence()
+			return Sequence(statements)
 		else: 
 			self.error("expected a program before " + str(self.token))
-		

@@ -207,3 +207,10 @@ class Assignment(Void):
         if not(env.set(self.id,_type,value)):
             text = f"Variable at line {line} was not declared"
             raise Exception(text)
+
+class Sequence(Void):
+    def __init__(self, statements):
+        self.statements = statements
+    def eval(self, env):
+        for stmt in self.statements:
+            stmt.eval(env)
