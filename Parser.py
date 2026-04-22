@@ -116,17 +116,17 @@ class Parser:
 				self.check(ord('*'))
 				right = self.unaryExpression()
 				node = Multiply(left,right)
-				self.extendedMultiplicativeExpression(node)
+				return self.extendedMultiplicativeExpression(node)
 			elif self.token.tag == ord('/'):
 				self.check(ord('/'))
 				right = self.unaryExpression()
 				node = Divide(left, right)
-				self.extendedMultiplicativeExpression(node)
+				return self.extendedMultiplicativeExpression(node)
 			elif self.token.tag == Tag.MOD:
 				self.check(Tag.MOD)
 				right = self.unaryExpression()
 				node = Modulo(left, right)
-				self.extendedMultiplicativeExpression(node)
+				return self.extendedMultiplicativeExpression(node)
 		else:
 			return left
 
