@@ -210,12 +210,12 @@ class Parser:
 			if self.token.tag == ord('='):
 				self.check(ord('='))
 				right = self.relationalExpression()
-				node = Equal(right,left)
+				node = Equal(left,right)
 				return self.extendedEqualityExpression(node)
 			elif self.token.tag == Tag.NEQ:
 				self.check(Tag.NEQ)
 				right = self.relationalExpression()
-				node = NotEqual(right,left)
+				node = NotEqual(left,right)
 				return self.extendedEqualityExpression(node)
 		else:
 			return left
@@ -263,7 +263,7 @@ class Parser:
 	#<conditional-expression> ::= <conditional-term> <extended-conditional-expression>
 	def conditionalExpression(self):
 		if self.token.tag in self.firstConditionalExpression:
-			epxr = self.conditionalTerm()
+			expr = self.conditionalTerm() #typo fix
 			return self.extendedConditionalExpression(expr)
 		else:
 			self.error("expected an conditional expression before " + str(self.token))
@@ -319,7 +319,7 @@ class Parser:
 			stmnt = self.statement()
 			if stmnt:
 				statements.append(stmnt)
-			return statements
+		return statements #fixed identation LOL
 	
 	#<identifier-list> ::= ',' <identifier> <identifier-list>
 	#<identifier-list> ::= ' '
@@ -327,10 +327,10 @@ class Parser:
 	def identifierList(self):
 		if self.token.tag in self.firstIdentifierList:
 			if self.token.tag == ord(','):
-				id_name = self.token.value
 				self.check(ord(','))
-				self.current_table.insert(id_name)
+				id_name = self.token.value
 				self.check(Tag.ID)
+				self.current_table.insert(id_name)
 				self.identifierList()
 	
 	#<declaration-sequence> ::= VAR <identifier> <identifier-list>
