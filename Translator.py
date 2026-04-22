@@ -193,19 +193,24 @@ class Print(Void):
         print(result)
 
 class Assignment(Void):
-    def __init__(self,expression):
+    def __init__(self, id_name, expression, line):
+        self.id_name = id_name
         self.expression = expression
+        self.line = line
+
     def eval(self,env):
         result = self.expression.eval(env)
         _type = None
+        
         if isinstance(self.expression,Numeric):
             _type = Type.NUMBER
             value = float(result)
         else:
             _type = Type.BOOLEAN
             value = bool(result)
-        if not(env.set(self.id,_type,value)):
-            text = f"Variable at line {line} was not declared"
+            
+        if not(env.set(self.id_name, _type, value)):
+            text = f"Line {self.line} - Variable '{self.id_name}' was not declared"
             raise Exception(text)
 
 class Sequence(Void):
