@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, Any
 
 from Type import *
-from BaseNodes import Numeric
+from .base_nodes import Node, Numeric
 
 @dataclass
 class Number(Numeric):

@@ -1,6 +1,10 @@
 from Lexer import *
-from Translator import *
-from NumericNodes import *
+from SymbolTable import *
+
+from Nodes.base_nodes import Node, Numeric, Logic, Void
+from Nodes.logic_nodes import *
+from Nodes.numeric_nodes import Number, Add, Subtract, Multiply, Divide, Modulo, Minus, Identifier
+from Nodes.void_nodes import Print, Assignment, Sequence
 
 class Parser:
 	lex = None
