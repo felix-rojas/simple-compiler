@@ -16,28 +16,31 @@ class Parser:
 		self.token = None
 		self.current_table = None
 
-		""" DEFINE FIRST SET """
-		self.firstPrimaryExpression = set((Tag.ID, Tag.NUMBER, Tag.TRUE, Tag.FALSE, ord('(')))
-		self.firstUnaryExpression = self.firstPrimaryExpression.union( set((ord('-'), ord('!'))) )
-		self.firstExtendedMultiplicativeExpression = set((ord('*'), ord('/'), Tag.MOD))
+		""" 
+		DEFINE FIRST SET
+		frozenset is faster and immutable 
+		"""
+		self.firstPrimaryExpression = frozenset((Tag.ID, Tag.NUMBER, Tag.TRUE, Tag.FALSE, ord('(')))
+		self.firstUnaryExpression = self.firstPrimaryExpression.union( frozenset((ord('-'), ord('!'))) )
+		self.firstExtendedMultiplicativeExpression = frozenset((ord('*'), ord('/'), Tag.MOD))
 		self.firstMultiplicativeExpression = self.firstUnaryExpression
-		self.firstExtendedAdditiveExpression = set((ord('+'), ord('-')))
+		self.firstExtendedAdditiveExpression = frozenset((ord('+'), ord('-')))
 		self.firstAdditiveExpression = self.firstMultiplicativeExpression
-		self.firstExtendedRelationalExpression = set((ord('<'), Tag.LEQ, ord('>'), Tag.GEQ))
+		self.firstExtendedRelationalExpression = frozenset((ord('<'), Tag.LEQ, ord('>'), Tag.GEQ))
 		self.firstRelationalExpression = self.firstAdditiveExpression
-		self.firstExtendedEqualityExpression = set((ord('='), Tag.NEQ))
+		self.firstExtendedEqualityExpression = frozenset((ord('='), Tag.NEQ))
 		self.firstEqualityExpression = self.firstRelationalExpression
-		self.firstExtendedConditionalTerm = set({Tag.AND})
+		self.firstExtendedConditionalTerm = frozenset({Tag.AND})
 		self.firstConditionalTerm = self.firstEqualityExpression
-		self.firstExtendedConditionalExpression = set({Tag.OR})
+		self.firstExtendedConditionalExpression = frozenset({Tag.OR})
 		self.firstConditionalExpression = self.firstConditionalTerm
 		self.firstExpression = self.firstConditionalExpression
-		self.firstTextStatement = set({Tag.PRINT})
-		self.firstAssigmentStatement = set({Tag.ID})
+		self.firstTextStatement = frozenset({Tag.PRINT})
+		self.firstAssigmentStatement = frozenset({Tag.ID})
 		self.firstStatement = self.firstAssigmentStatement.union(self.firstTextStatement)
 		self.firstStatementSequence = self.firstStatement
-		self.firstIdentifierList = set({ord(',')})
-		self.firstDeclarationSequence = set({Tag.VAR})
+		self.firstIdentifierList = frozenset({ord(',')})
+		self.firstDeclarationSequence = frozenset({Tag.VAR})
 		self.firstProgram = self.firstDeclarationSequence
 
 	def error(self, extra = None):
@@ -333,7 +336,6 @@ class Parser:
 	
 	#<identifier-list> ::= ',' <identifier> <identifier-list>
 	#<identifier-list> ::= ' '
-	# not sure if i should handle the else here since ill call it recursively
 	def identifierList(self):
 		if self.token.tag in self.firstIdentifierList:
 			if self.token.tag == ord(','):
