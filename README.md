@@ -1,4 +1,4 @@
-# simple-compiler
+# simple-parser
 
 This activity derives from the code at [Simple Parser](https://github.com/Manchas2k4/tc3002b/tree/main/compilers/simple-parser) 
 
