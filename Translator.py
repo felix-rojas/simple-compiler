@@ -1,21 +1,6 @@
 from SymbolTable import *
 from Type import *
-
-class Node:
-    def eval(self, env):
-        pass
-
-class Numeric(Node):
-    def eval(self, env):
-        pass
-
-class Logic(Node):
-    def eval(self, env):
-        pass
-
-class Void(Node):
-    def eval(self, env):
-        pass
+from BaseNodes import Logic, Numeric, Void
 
 # --- NUMERIC --- #
 class Number(Numeric):
