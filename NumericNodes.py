@@ -4,10 +4,9 @@ from typing import Optional, Tuple, Any
 from Type import *
 from BaseNodes import Numeric
 
-
 @dataclass
 class Number(Numeric):
-    """Base class for numeric types. All numeric types are treated as floats."""
+    """All numeric types are treated as floats."""
     value: float
 
     def eval(self, env) -> float:

@@ -1,6 +1,6 @@
 from Lexer import *
 from Translator import *
-from Numeric import *
+from NumericNodes import *
 
 class Parser:
 	lex = None
